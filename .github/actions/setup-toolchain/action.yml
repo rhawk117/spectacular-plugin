@@ -1,0 +1,67 @@
+name: Setup Toolchain
+description: |
+    Install Node.js and bun, restore the bun install cache, and install dependencies exactly as locked in bun.lock.
+    Optionally restore prek's hook environments. The repository must already be checked out.
+
+    Node.js runs the project's tools (ESLint, Prettier, tsc, Vitest, prek); bun installs them. The bun version comes
+    from package.json's packageManager field.
+
+inputs:
+    node-version:
+        description: Node.js version to install. Required; the action fails when it is empty.
+        required: true
+    prek-cache:
+        description: "'true' caches prek's hook environments (~/.cache/prek), keyed on .pre-commit-config.yaml and bun.lock."
+        required: false
+        default: 'false'
+
+runs:
+    using: composite
+    steps:
+        - name: Validate Inputs
+          shell: bash
+          env:
+              NODE_VERSION: ${{ inputs.node-version }}
+              PREK_CACHE: ${{ inputs.prek-cache }}
+          run: |
+              if [[ -z "$NODE_VERSION" ]]; then
+                echo "::error title=Missing input::node-version is required (set the NODE_VERSION repository variable)"
+                exit 1
+              fi
+
+              case "$PREK_CACHE" in
+                true | false) ;;
+                *)
+                  echo "::error title=Invalid input::prek-cache must be 'true' or 'false'"
+                  exit 1
+                  ;;
+              esac
+
+        - name: Setup Node.js
+          uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+          with:
+              node-version: ${{ inputs.node-version }}
+
+        - name: Setup Bun
+          uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+          with:
+              bun-version-file: package.json
+
+        - name: Cache Bun Packages
+          uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+          with:
+              path: ~/.bun/install/cache
+              key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+              restore-keys: bun-${{ runner.os }}-
+
+        - name: Install Dependencies
+          shell: bash
+          run: bun install --frozen-lockfile
+
+        - name: Cache Prek Hook Environments
+          if: ${{ inputs.prek-cache == 'true' }}
+          uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+          with:
+              path: ~/.cache/prek
+              key: prek-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml', 'bun.lock') }}
+              restore-keys: prek-${{ runner.os }}-

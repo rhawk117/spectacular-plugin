@@ -1,0 +1,71 @@
+name: Execute Test Suite
+author: rhawk117
+description: |
+    Runs Vitest with a JUnit report, summarizes the run, and uploads the report
+
+inputs:
+    vitest-args:
+        description: 'Extra Vitest arguments, one per line'
+        required: false
+        default: ''
+
+    artifact-name:
+        description: 'Name of the uploaded JUnit artifact'
+        required: false
+        default: vitest-junit-${{ github.job }}-${{ strategy.job-index }}
+
+runs:
+    using: composite
+    steps:
+        - id: vitest
+          name: Run Vitest
+          shell: bash
+          env:
+              RESULTS_DIR: ${{ runner.temp }}/vitest-results
+              VITEST_ARGS: ${{ inputs.vitest-args }}
+          run: |
+              mkdir -p "$RESULTS_DIR"
+              junit_report="$RESULTS_DIR/junit.xml"
+              echo "junit-report=$junit_report" >> "$GITHUB_OUTPUT"
+
+              mapfile -t extra_arguments < <(printf '%s\n' "$VITEST_ARGS" | sed '/^[[:space:]]*$/d')
+
+              echo "::group::Executing Test Suite"
+              node_modules/.bin/vitest run \
+                --reporter=default \
+                --reporter=github-actions \
+                --reporter=junit \
+                --outputFile.junit="$junit_report" \
+                "${extra_arguments[@]}"
+              echo "::endgroup::"
+
+        - if: ${{ !cancelled() && steps.vitest.outputs.junit-report != '' }}
+          name: Summarize Test Run
+          shell: bash
+          env:
+              JUNIT_REPORT: ${{ steps.vitest.outputs.junit-report }}
+          run: |
+              if [[ ! -s "$JUNIT_REPORT" ]]; then
+                echo "::warning::No JUnit report at $JUNIT_REPORT"
+                exit 0
+              fi
+
+              read -r tests failures errors skipped duration < <(
+                yq -p xml -o tsv '.testsuites | [.+@tests, .+@failures, .+@errors, .+@skipped // 0, .+@time]' "$JUNIT_REPORT"
+              )
+
+              {
+                echo "## Test Results"
+                echo
+                echo "| Tests | Failures | Errors | Skipped | Duration (s) |"
+                echo "| --- | --- | --- | --- | --- |"
+                echo "| $tests | $failures | $errors | $skipped | $duration |"
+              } >> "$GITHUB_STEP_SUMMARY"
+
+        - if: ${{ !cancelled() && steps.vitest.outputs.junit-report != '' }}
+          name: Upload Test Report
+          uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+          with:
+              name: ${{ inputs.artifact-name }}
+              path: ${{ steps.vitest.outputs.junit-report }}
+              if-no-files-found: warn

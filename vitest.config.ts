@@ -5,6 +5,9 @@ import { defineConfig, type ViteUserConfig } from 'vitest/config';
 const config: ViteUserConfig = defineConfig({
     test: {
         sequence: { shuffle: true },
+        restoreMocks: true,
+        unstubEnvs: true,
+        unstubGlobals: true,
         projects: [
             {
                 extends: true,

@@ -1,0 +1,93 @@
+name: Execute Test Suite
+author: rhawk117
+description: |
+    Runs one Vitest tier in shuffled order with coverage, summarizes the run, and uploads the HTML coverage report
+
+inputs:
+    project:
+        description: 'Vitest project (test tier) to run: unit or integration'
+        required: true
+
+    workers:
+        description: 'Vitest worker count, empty or auto keeps the Vitest default'
+        required: false
+        default: ''
+
+    coverage:
+        description: 'Collect coverage and enforce its thresholds (true or false)'
+        required: false
+        default: 'true'
+
+    vitest-args:
+        description: 'Extra Vitest arguments, one per line'
+        required: false
+        default: ''
+
+    random-seed:
+        description: 'Shuffle seed, defaults to a fresh seed each run'
+        required: false
+        default: ''
+
+    artifact-name:
+        description: 'Name of the uploaded HTML coverage artifact'
+        required: false
+        default: coverage-html-${{ github.job }}-${{ strategy.job-index }}
+
+runs:
+    using: composite
+    steps:
+        - id: vitest
+          name: Run Vitest
+          shell: bash
+          env:
+              RESULTS_DIR: ${{ runner.temp }}/vitest-results-${{ inputs.project }}
+              PROJECT: ${{ inputs.project }}
+              WORKERS: ${{ inputs.workers }}
+              COVERAGE: ${{ inputs.coverage }}
+              VITEST_ARGS: ${{ inputs.vitest-args }}
+              RANDOM_SEED: ${{ inputs.random-seed }}
+              SCRIPT_PATH: ${{ github.action_path }}/vitest_ci.ts
+          run: |
+              arguments_file="$RUNNER_TEMP/vitest-arguments-$PROJECT"
+              bun "$SCRIPT_PATH" resolve \
+                --results-dir "$RESULTS_DIR" \
+                --project "$PROJECT" \
+                --workers "$WORKERS" \
+                --coverage "$COVERAGE" \
+                --random-seed "$RANDOM_SEED" \
+                --vitest-args="$VITEST_ARGS" \
+                >"$arguments_file"
+
+              mapfile -d '' -t arguments <"$arguments_file"
+
+              echo "::group::Executing Test Suite ($PROJECT)"
+              bun run vitest run "${arguments[@]}"
+              echo "::endgroup::"
+
+        - if: ${{ !cancelled() && steps.vitest.outputs.json-report != '' }}
+          name: Summarize Test Run
+          shell: bash
+          env:
+              JSON_REPORT: ${{ steps.vitest.outputs.json-report }}
+              COVERAGE_SUMMARY: ${{ steps.vitest.outputs.coverage-summary }}
+              RANDOM_SEED: ${{ steps.vitest.outputs.random-seed }}
+              PROJECT: ${{ inputs.project }}
+              WORKERS: ${{ inputs.workers }}
+              SCRIPT_PATH: ${{ github.action_path }}/vitest_ci.ts
+          run: |
+              bun "$SCRIPT_PATH" summarize \
+                --json-report "$JSON_REPORT" \
+                --coverage-summary "$COVERAGE_SUMMARY" \
+                --project "$PROJECT" \
+                --random-seed "$RANDOM_SEED" \
+                --workers "$WORKERS" \
+                --node-version "$(node --version)" \
+                >>"$GITHUB_STEP_SUMMARY"
+
+        - if: ${{ !cancelled() && steps.vitest.outputs.coverage-html != '' }}
+          name: Upload Coverage Report
+          uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+          with:
+              name: ${{ inputs.artifact-name }}
+              path: ${{ steps.vitest.outputs.coverage-html }}
+              if-no-files-found: warn

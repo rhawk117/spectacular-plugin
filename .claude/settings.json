@@ -1,0 +1,60 @@
+{
+    "permissions": {
+        "ask": [
+            "Edit(eslint.config.ts)",
+            "Edit(.oxlintrc.json)",
+            "Edit(prettier.config.ts)",
+            "Edit(tsconfig.json)",
+            "Edit(.pre-commit-config.yaml)",
+            "Edit(.markdownlint-cli2.jsonc)",
+            "Edit(vitest.config.ts)",
+            "Edit(bunfig.toml)",
+            "Edit(CLAUDE.md)"
+        ],
+        "deny": ["Edit(bun.lock)"]
+    },
+    "hooks": {
+        "PreToolUse": [
+            {
+                "matcher": "Edit|Write|MultiEdit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash",
+                        "args": [
+                            "${CLAUDE_PROJECT_DIR}/.claude/hooks/suppressions.sh"
+                        ]
+                    }
+                ]
+            }
+        ],
+        "PostToolUse": [
+            {
+                "matcher": "Edit|Write|MultiEdit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash",
+                        "args": [
+                            "${CLAUDE_PROJECT_DIR}/.claude/hooks/format.sh"
+                        ]
+                    }
+                ]
+            }
+        ],
+        "Stop": [
+            {
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash",
+                        "args": [
+                            "${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-checks.sh"
+                        ],
+                        "timeout": 300
+                    }
+                ]
+            }
+        ]
+    }
+}

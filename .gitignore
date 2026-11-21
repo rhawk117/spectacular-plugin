@@ -1,0 +1,10 @@
+# Dependencies
+node_modules/
+
+# Tool caches: ESLint, Prettier and tsc incremental state
+.cache/
+.eslintcache
+*.tsbuildinfo
+
+# Test output
+coverage/

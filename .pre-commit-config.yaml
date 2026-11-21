@@ -1,0 +1,189 @@
+exclude: |
+    (?x)^(
+      \.idea|\.vscode|
+      \.bashrc|\.bash_profile|\.profile|\.zshrc|\.zprofile|
+      \.gitconfig|\.gitmodules|\.ripgreprc|
+      dist|
+      \.claude/(settings\.local\.json|scheduled_tasks\.json|launch\.json|loop\.md|routines|commands|agents|output-styles|workflows|skills)
+    )(/|$)
+default_stages: [pre-commit]
+default_install_hook_types:
+    - pre-commit
+    - post-checkout
+    - post-merge
+    - post-rewrite
+
+priorities:
+    lint: 100
+
+repos:
+    - repo: builtin
+      hooks:
+          - id: end-of-file-fixer
+            groups: [hygiene, format]
+            priority: 0
+
+          - id: mixed-line-ending
+            args: [--fix=lf]
+            groups: [hygiene, format]
+            priority: 1
+
+          - id: trailing-whitespace
+            args: [--markdown-linebreak-ext=md]
+            groups: [hygiene, format]
+            priority: 2
+
+          - id: check-added-large-files
+            args: [--maxkb=1000]
+            groups: [hygiene, lint]
+            priority: lint
+
+          - id: check-case-conflict
+            groups: [hygiene, lint]
+            priority: lint
+
+          - id: check-json
+            exclude: ^(tsconfig\.json|\.oxlintrc\.json)$
+            groups: [hygiene, lint]
+            priority: lint
+
+          - id: check-jsonc
+            files: ^(tsconfig\.json|\.oxlintrc\.json)$
+            types: [text]
+            groups: [hygiene, lint]
+            priority: lint
+
+          - id: check-yaml
+            groups: [hygiene, lint]
+            priority: lint
+
+          - id: check-shebang-scripts-are-executable
+            types: [shell]
+            groups: [hygiene, lint]
+            priority: lint
+
+    # Project-local binaries through bun run (bun install), so prek, package scripts,
+    # the Claude Code hooks and CI all run the versions locked in bun.lock.
+    - repo: local
+      hooks:
+          - id: oxlint-fix
+            name: oxlint fix
+            language: system
+            entry: bun run oxlint --fix
+            types_or: [ts, javascript]
+            groups: [typescript, format]
+            priority: 10
+
+          - id: eslint-fix
+            name: eslint fix
+            language: system
+            entry: bun run eslint --fix --cache --cache-location .cache/eslint/
+            types: [ts]
+            require_serial: true
+            groups: [typescript, format]
+            priority: 11
+
+          - id: markdownlint-fix
+            name: markdownlint fix
+            language: system
+            entry: bun run markdownlint-cli2 --fix
+            types: [markdown]
+            groups: [markdown, format]
+            priority: 11
+
+          - id: prettier-write
+            name: prettier write
+            language: system
+            entry: bun run prettier --write --cache --cache-location .cache/prettier/cache.json --ignore-unknown
+            types: [text]
+            groups: [typescript, markdown, format]
+            priority: 12
+
+          - id: build
+            name: bun build dist
+            language: system
+            entry: bash scripts/build.sh
+            files: ^(src/|package\.json$|bun\.lock$|scripts/build\.sh$)
+            pass_filenames: false
+            groups: [typescript, format]
+            priority: 13
+
+          - id: prettier-check
+            name: prettier check
+            language: system
+            entry: bun run prettier --check --cache --cache-location .cache/prettier/cache.json --ignore-unknown
+            types: [text]
+            groups: [typescript, markdown, lint]
+            priority: lint
+
+          - id: markdownlint
+            name: markdownlint
+            language: system
+            entry: bun run markdownlint-cli2
+            types: [markdown]
+            groups: [markdown, lint]
+            priority: lint
+
+          - id: oxlint
+            name: oxlint
+            language: system
+            entry: bun run oxlint --deny-warnings
+            types_or: [ts, javascript]
+            groups: [typescript, lint]
+            priority: lint
+
+          - id: eslint
+            name: eslint
+            language: system
+            entry: bun run eslint --cache --cache-location .cache/eslint/ --max-warnings 0
+            types: [ts]
+            require_serial: true
+            groups: [typescript, lint]
+            priority: lint
+
+          - id: dist-fresh
+            name: dist matches a fresh build
+            language: system
+            entry: bash scripts/check-dist.sh
+            files: ^(src/|package\.json$|bun\.lock$|scripts/(build|check-dist)\.sh$)
+            pass_filenames: false
+            groups: [typescript, lint]
+            priority: lint
+
+          - id: tsc
+            name: tsc
+            language: system
+            entry: bun run tsc --noEmit
+            files: (\.ts|^tsconfig\.json|^package\.json)$
+            pass_filenames: false
+            groups: [typescript, lint]
+            priority: lint
+
+    - repo: https://github.com/scop/pre-commit-shfmt
+      rev: v3.14.1-1
+      hooks:
+          - id: shfmt
+            args: [--write, --indent=2, --case-indent]
+            groups: [shell, format]
+            priority: 20
+
+    - repo: https://github.com/shellcheck-py/shellcheck-py
+      rev: v0.11.0.1-1
+      hooks:
+          - id: shellcheck
+            groups: [shell, lint]
+            priority: lint
+
+    - repo: https://github.com/rhysd/actionlint
+      rev: v1.7.12
+      hooks:
+          - id: actionlint
+            groups: [workflows, lint]
+            priority: lint
+
+    - repo: https://github.com/zizmorcore/zizmor-pre-commit
+      rev: v1.32.0
+      hooks:
+          - id: zizmor
+            groups: [workflows, lint]
+            priority: lint

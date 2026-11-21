@@ -1,0 +1,97 @@
+name: Release
+permissions: {}
+
+on:
+    workflow_dispatch:
+        inputs:
+            version-bump:
+                options: [recover, patch, minor, major]
+                type: choice
+                default: recover
+                required: true
+                description: Semantic version bump or recover an existing release
+
+concurrency:
+    group: release-${{ github.repository }}
+    cancel-in-progress: false
+
+defaults:
+    run:
+        shell: bash
+
+env:
+    VERSION_BUMP: ${{ inputs.version-bump }}
+    REPOSITORY_IS_FORK: ${{ github.event.repository.fork }}
+
+jobs:
+    release-guard:
+        name: 🛡️ Validate Release Context
+        runs-on: ubuntu-24.04
+        timeout-minutes: 2
+        steps:
+            - name: Verify Repository and Branch
+              run: |
+                  if [[ "$REPOSITORY_IS_FORK" != false ]]; then
+                    echo "::error::Releases are disabled in forks."
+                    exit 1
+                  fi
+
+                  if [[ "$GITHUB_REF" != refs/heads/main ]]; then
+                    echo "::error::Releases must originate from main."
+                    exit 1
+                  fi
+
+    continuous-integration:
+        name: 🔁 Run CI Pipeline
+        needs: [release-guard]
+        uses: $/.github/workflows/ci.yml
+        permissions:
+            contents: read
+            actions: read
+            pull-requests: write
+            security-events: write
+
+    prepare-release:
+        name: 🚀 Prepare Release
+        needs: [continuous-integration]
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        permissions:
+            contents: write
+        outputs:
+            version: ${{ steps.prepare.outputs.version }}
+            tag: ${{ steps.prepare.outputs.tag }}
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  ref: ${{ github.sha }}
+                  fetch-depth: 0
+                  persist-credentials: true
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+              with:
+                  bun-version-file: package.json
+
+            - id: prepare
+              name: 🚀 Prepare Release
+              run: bash ./.github/scripts/release.sh
+
+            - name: Create GitHub Release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  GH_REPO: ${{ github.repository }}
+                  RELEASE_TAG: ${{ steps.prepare.outputs.tag }}
+              run: |
+                  if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+                    echo "::notice::Release already exists: ${RELEASE_TAG}"
+                    exit 0
+                  fi
+
+                  gh release create "$RELEASE_TAG" \
+                    --title "Release $RELEASE_TAG" \
+                    --generate-notes \
+                    --verify-tag
+
+                  echo "::notice::Published GitHub Release: ${RELEASE_TAG}"

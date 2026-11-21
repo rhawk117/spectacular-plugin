@@ -1,0 +1,141 @@
+name: Continuous Integration (CI)
+on:
+    workflow_call:
+    pull_request:
+        branches: [main]
+
+permissions:
+    contents: read
+
+concurrency:
+    group: plugin-ci-${{ github.repository }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
+defaults:
+    run:
+        shell: bash
+
+jobs:
+    labeler:
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        name: 📎 Label Pull Request
+        runs-on: ubuntu-24.04
+        timeout-minutes: 5
+        permissions:
+            contents: read
+            pull-requests: write
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+
+            - name: Apply Labels (labeler.yml)
+              id: apply-labels
+              uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7.0.0
+              with:
+                  repo-token: ${{ github.token }}
+                  configuration-path: .github/labeler.yml
+                  sync-labels: true
+                  dot: true
+
+            - name: Summarize PR Labels
+              if: ${{ !cancelled() }}
+              run: bash ./.github/scripts/label-summary.sh
+              env:
+                  LABELER_OUTCOME: ${{ steps.apply-labels.outcome }}
+                  NEW_LABELS: ${{ steps.apply-labels.outputs.new-labels }}
+                  ALL_LABELS: ${{ steps.apply-labels.outputs.all-labels }}
+
+    quality-checks:
+        name: 🧹 Quality Checks (prek)
+        runs-on: ubuntu-24.04
+        timeout-minutes: 15
+        permissions:
+            contents: read
+            actions: read
+            security-events: write
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+
+            - name: 🔒 Supply Chain Audit
+              uses: $/.github/actions/osv-scanner
+              with:
+                  upload-sarif: ${{ github.event.repository.fork != true && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.CODE_SCANNING == 'true' }}
+
+            - name: Setup Toolchain
+              uses: $/.github/actions/setup-toolchain
+              with:
+                  node-version: ${{ vars.NODE_VERSION }}
+                  prek-cache: 'true'
+
+            - name: 🔏 Verify Registry Signatures
+              run: npm audit signatures
+
+            - name: Run Prek Hooks
+              background: true
+              run: bun run prek run --all-files --show-diff-on-failure
+
+            - name: Run Test Suite (Unit Tier)
+              background: true
+              uses: $/.github/actions/test-suite
+              with:
+                  project: unit
+
+    integration-checks:
+        name: 🧪 Integration Tests
+        runs-on: ubuntu-24.04
+        timeout-minutes: 15
+        permissions:
+            contents: read
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+
+            - name: Setup Toolchain
+              uses: $/.github/actions/setup-toolchain
+              with:
+                  node-version: ${{ vars.NODE_VERSION }}
+
+            - name: Validate Claude Code Plugin
+              background: true
+              run: bash ./.github/scripts/cc-plugin-checker.sh
+
+            - name: Run Integration Tests
+              background: true
+              uses: $/.github/actions/test-suite
+              with:
+                  project: integration
+                  coverage: 'false'
+
+    workflow-narrator:
+        name: 🔉 Workflow Narrator
+        needs: [labeler, quality-checks, integration-checks]
+        if: ${{ always() && !cancelled() && github.event_name == 'pull_request' }}
+        runs-on: ubuntu-24.04
+        timeout-minutes: 5
+        permissions:
+            contents: read
+            actions: read
+            pull-requests: write
+        env:
+            NARRATOR_JOB_NAME: 🔉 Workflow Narrator
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+                  sparse-checkout: .github/scripts
+
+            - name: Publish Workflow Summary
+              uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+              with:
+                  github-token: ${{ github.token }}
+                  script: |
+                      const { narrate } = await import(`${process.env.GITHUB_WORKSPACE}/.github/scripts/narrator.mjs`);
+                      await narrate({ github, context, core });

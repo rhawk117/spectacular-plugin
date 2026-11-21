@@ -1,0 +1,24 @@
+{
+    // One compiler configuration for every TypeScript file (TC-01, POL-07).
+    "compilerOptions": {
+        "strict": true,
+        "target": "es2024",
+        "lib": ["es2024"],
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "types": ["node"],
+        // ITY-02: re-exported types need `export type`.
+        "isolatedModules": true,
+        // TYP-03: exported symbols carry the annotations isolatedDeclarations needs.
+        "isolatedDeclarations": true,
+        "declaration": true,
+        // SW-02: non-empty case groups must not fall through.
+        "noFallthroughCasesInSwitch": true,
+        // CLS-20: report parameter properties read from field initializers.
+        "useDefineForClassFields": true,
+        "noEmit": true,
+        "incremental": true,
+        "tsBuildInfoFile": ".cache/tsc/tsconfig.tsbuildinfo"
+    },
+    "include": ["src", "tests", ".github/**/*.ts", "*.ts"]
+}

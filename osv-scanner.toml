@@ -1,0 +1,17 @@
+# Advisories in dev-only tooling whose fix lies outside the version range their parent package allows.
+# bun audit fix cannot reach them; remove each entry once the parent package widens its range.
+
+[[IgnoredVulns]]
+id = "GHSA-gg6h-894w-4m9c"
+ignoreUntil = 2026-12-21
+reason = "re2js 2.8.6 is pinned exactly by markdownlint 0.42.0 (dev only, lints repository Markdown); fixed in 2.8.7."
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2026-12-21
+reason = "minimatch 10.2.6 comes from eslint, typescript-eslint and eslint-plugin-sonarjs (dev only, ^10 range); fixed in 11.0.1."
+
+[[IgnoredVulns]]
+id = "GHSA-238p-pmpm-9mq7"
+ignoreUntil = 2026-12-21
+reason = "katex 0.16.47 comes from markdownlint's math extension (dev only, never renders untrusted input); fixed in 0.18.2."

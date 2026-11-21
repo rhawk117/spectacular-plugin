@@ -1,0 +1,2 @@
+# Follow sourced files such as scripts/log.sh instead of reporting SC1091.
+external-sources=true

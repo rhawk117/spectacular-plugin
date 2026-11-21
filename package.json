@@ -12,6 +12,7 @@
     "scripts": {
         "format": "prek run --all-files --group format",
         "lint": "prek run --all-files --group lint",
+        "build": "bash scripts/build.sh",
         "typecheck": "tsc --noEmit",
         "test": "vitest run"
     },

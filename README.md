@@ -19,6 +19,7 @@ The second command enables the TypeScript language server plugin in Claude Code.
 | Target           | What it does                                                                                  |
 | ---------------- | --------------------------------------------------------------------------------------------- |
 | `make help`      | List the targets                                                                              |
+| `make build`     | Bundle each `src/bin` entrypoint into `dist/`                                                 |
 | `make sync`      | Install dependencies exactly as locked in `bun.lock`                                          |
 | `make format`    | Run the prek format hooks (oxlint, ESLint and Prettier fixes, shfmt)                          |
 | `make lint`      | Run the prek lint hooks (Prettier check, oxlint, ESLint, tsc, shellcheck, actionlint, zizmor) |
@@ -30,8 +31,20 @@ The second command enables the TypeScript language server plugin in Claude Code.
 Lint rules follow the Google TypeScript Style Guide. `docs/google-typescript-style.md` holds the
 digest of its rules and `docs/lint-rule-map.md` maps each rule ID to the check that enforces it.
 
+## Build
+
+Each `src/bin/<name>.ts` is an entrypoint (a hook script, an MCP server or a CLI). `make build` bundles
+it and its dependencies into one ESM file, `dist/<name>.js`, with `bun build`. Claude Code installs a
+plugin by copying the repository and never runs `bun install`, so `dist/` is committed and plugin
+config runs it with `node ${CLAUDE_PLUGIN_ROOT}/dist/<name>.js`. The prek `build` hook rebuilds
+`dist/` on commit, and the `dist-fresh` lint hook fails in CI when `dist/` differs from a fresh build.
+
+## Claude Code hooks
+
 In Claude Code, `.claude/hooks/format.sh` runs after every edit: Prettier formats the file and
 ESLint fixes what it can. Errors ESLint cannot fix are sent back to Claude.
+`.claude/hooks/suppressions.sh` asks for permission before an edit adds a lint, type, format or
+coverage suppression comment.
 
 ## CI
 

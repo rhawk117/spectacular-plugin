@@ -3,6 +3,7 @@ exclude: |
       \.idea|\.vscode|
       \.bashrc|\.bash_profile|\.profile|\.zshrc|\.zprofile|
       \.gitconfig|\.gitmodules|\.ripgreprc|
+      dist|
       \.claude/(settings\.local\.json|scheduled_tasks\.json|launch\.json|loop\.md|routines|commands|agents|output-styles|workflows|skills)
     )(/|$)
 default_stages: [pre-commit]
@@ -61,8 +62,8 @@ repos:
             groups: [hygiene, lint]
             priority: lint
 
-    # Project-local binaries from node_modules (npm ci), so prek, npm scripts,
-    # the Claude Code hook and CI all run the versions pinned in package-lock.json.
+    # Project-local binaries from node_modules (bun install), so prek, package scripts,
+    # the Claude Code hooks and CI all run the versions locked in bun.lock.
     - repo: local
       hooks:
           - id: oxlint-fix
@@ -90,6 +91,15 @@ repos:
             groups: [typescript, format]
             priority: 12
 
+          - id: build
+            name: bun build dist
+            language: system
+            entry: bash scripts/build.sh
+            files: ^(src/|package\.json$|bun\.lock$|scripts/build\.sh$)
+            pass_filenames: false
+            groups: [typescript, format]
+            priority: 13
+
           - id: prettier-check
             name: prettier check
             language: system
@@ -115,11 +125,20 @@ repos:
             groups: [typescript, lint]
             priority: lint
 
+          - id: dist-fresh
+            name: dist matches a fresh build
+            language: system
+            entry: bash scripts/check-dist.sh
+            files: ^(src/|package\.json$|bun\.lock$|scripts/(build|check-dist)\.sh$)
+            pass_filenames: false
+            groups: [typescript, lint]
+            priority: lint
+
           - id: tsc
             name: tsc
             language: system
             entry: node_modules/.bin/tsc --noEmit
-            files: (\.ts|^tsconfig\.json|^package(-lock)?\.json)$
+            files: (\.ts|^tsconfig\.json|^package\.json)$
             pass_filenames: false
             groups: [typescript, lint]
             priority: lint

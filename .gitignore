@@ -8,6 +8,3 @@ node_modules/
 
 # Test output
 coverage/
-
-# Build output
-dist/

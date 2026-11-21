@@ -23,6 +23,7 @@ source:
     - changed-files:
           - any-glob-to-any-file:
                 - src/**
+                - dist/**
 
 tests:
     - changed-files:

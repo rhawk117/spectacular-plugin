@@ -2,5 +2,9 @@
     "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
     "name": "spectacular-plugin",
     "version": "0.1.0",
-    "description": "A Claude Code plugin written in TypeScript."
+    "description": "A Claude Code plugin written in TypeScript.",
+    "author": {
+        "name": "rhawk117",
+        "url": "https://github.com/rhawk117"
+    }
 }

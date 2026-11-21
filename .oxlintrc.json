@@ -1,0 +1,111 @@
+{
+    // oxlint runs the syntax-only rules. Base: the default "correctness" category.
+    // Each rule listed below cites the docs/google-typescript-style.md rule it enforces.
+    // eslint.config.ts turns these rules off in ESLint through eslint-plugin-oxlint.
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    // Default plugins plus "import" for EXP-01, EXP-02, EXP-04 and SFS-01.
+    "plugins": ["eslint", "typescript", "unicorn", "oxc", "import"],
+    "categories": {
+        "correctness": "error"
+    },
+    "ignorePatterns": ["node_modules/", ".cache/", "coverage/", "dist/"],
+    "rules": {
+        // SFB-02: no whitespace but ASCII space, including inside strings and templates.
+        "eslint/no-irregular-whitespace": [
+            "error",
+            {
+                "skipStrings": false,
+                "skipTemplates": false,
+                "skipRegExps": false,
+                "skipComments": false
+            }
+        ],
+        // NAM-16: omit trailing unused parameters instead of prefixing them with _ (oxlint ignores ^_ by default).
+        "eslint/no-unused-vars": [
+            "error",
+            { "args": "after-used", "argsIgnorePattern": "^$" }
+        ],
+        // SFS-01: imports come before the implementation.
+        "import/first": "error",
+        // EXP-01, EXP-02: named exports only.
+        "import/no-default-export": "error",
+        // EXP-04: no mutable exports.
+        "import/no-mutable-exports": "error",
+        // VAR-01: const unless reassigned.
+        "eslint/prefer-const": "error",
+        // VAR-02: no var.
+        "eslint/no-var": "error",
+        // VAR-04: one variable per declaration.
+        "eslint/one-var": ["error", "never"],
+        // ARR-01: no Array constructor (the correctness category already bans new Array(n)).
+        "eslint/no-array-constructor": "error",
+        // OBJ-01: no Object constructor.
+        "eslint/no-object-constructor": "error",
+        // OBJ-02, CTL-06: filter for-in loops.
+        "eslint/guard-for-in": "error",
+        // CLS-13: no empty or super-only constructors.
+        "eslint/no-useless-constructor": "error",
+        // CLS-32, DIS-08: no prototype manipulation or built-in modification.
+        "eslint/no-extend-native": "error",
+        "eslint/no-proto": "error",
+        // FN-01: named functions are declarations; arrows stay allowed.
+        "eslint/func-style": [
+            "error",
+            "declaration",
+            { "allowArrowFunctions": true }
+        ],
+        // FN-03, FN-06: arrows instead of function expressions and bind(this) callbacks.
+        "eslint/prefer-arrow-callback": "error",
+        // FN-07: no named callbacks passed to array methods.
+        "unicorn/no-array-callback-reference": "error",
+        // FN-13: rest parameters instead of arguments.
+        "eslint/prefer-rest-params": "error",
+        // FN-14: spread instead of Function.prototype.apply.
+        "eslint/prefer-spread": "error",
+        // STR-02: no line continuations in string literals.
+        "eslint/no-multi-str": "error",
+        // STR-03: template literals over concatenation.
+        "eslint/prefer-template": "error",
+        // COE-03, COE-05: no '' + x or +x coercion; !! stays allowed (COE-01).
+        "eslint/no-implicit-coercion": [
+            "error",
+            { "boolean": false, "number": true, "string": true }
+        ],
+        // COE-05: Number() instead of parseFloat.
+        "eslint/no-restricted-globals": [
+            "error",
+            {
+                "name": "parseFloat",
+                "message": "COE-05: use Number() to parse strings."
+            }
+        ],
+        // CTL-01: braces on every control statement (stricter reading; drops the one-line if exception).
+        "eslint/curly": ["error", "all"],
+        // EXC-02: new Error(), not Error().
+        "unicorn/throw-new-error": "error",
+        // EXC-06: an empty block, catch included, needs an explaining comment.
+        "eslint/no-empty": "error",
+        // SW-01: every switch has a default, and it comes last.
+        "eslint/default-case": "error",
+        "eslint/default-case-last": "error",
+        // EQ-01: === and !==, except == null.
+        "eslint/eqeqeq": ["error", "always", { "null": "ignore" }],
+        // DIS-01, TYP-23: no new String/Boolean/Number.
+        "eslint/no-new-wrappers": "error",
+        // DIS-06: no Function(string) constructor (eval is banned by correctness).
+        "eslint/no-new-func": "error",
+        // NAM-01: identifiers use ASCII letters, digits, _ and $.
+        "eslint/id-match": ["error", "^[A-Za-z0-9_$]*$"],
+        // NAM-18: snake_case file names (stricter reading of the guide's file-name gap).
+        "unicorn/filename-case": ["error", { "case": "snakeCase" }]
+    },
+    "overrides": [
+        {
+            // Prettier and ESLint load their config through a default export (IMP-01: external code that requires it).
+            "files": ["*.config.ts"],
+            "rules": {
+                "import/no-default-export": "off"
+            }
+        }
+    ]
+}

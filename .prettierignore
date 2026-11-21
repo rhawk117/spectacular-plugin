@@ -1,0 +1,6 @@
+package-lock.json
+.cache/
+coverage/
+dist/
+# Verbatim digest of the style guide: formatting would rewrite its Bad/Good code samples.
+docs/google-typescript-style.md

@@ -83,12 +83,20 @@ repos:
             groups: [typescript, format]
             priority: 11
 
+          - id: markdownlint-fix
+            name: markdownlint fix
+            language: system
+            entry: bun run markdownlint-cli2 --fix
+            types: [markdown]
+            groups: [markdown, format]
+            priority: 11
+
           - id: prettier-write
             name: prettier write
             language: system
             entry: bun run prettier --write --cache --cache-location .cache/prettier/cache.json --ignore-unknown
             types: [text]
-            groups: [typescript, format]
+            groups: [typescript, markdown, format]
             priority: 12
 
           - id: build
@@ -105,7 +113,15 @@ repos:
             language: system
             entry: bun run prettier --check --cache --cache-location .cache/prettier/cache.json --ignore-unknown
             types: [text]
-            groups: [typescript, lint]
+            groups: [typescript, markdown, lint]
+            priority: lint
+
+          - id: markdownlint
+            name: markdownlint
+            language: system
+            entry: bun run markdownlint-cli2
+            types: [markdown]
+            groups: [markdown, lint]
             priority: lint
 
           - id: oxlint

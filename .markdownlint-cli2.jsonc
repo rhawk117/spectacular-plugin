@@ -1,0 +1,19 @@
+// Markdown structure checks. Prettier owns layout, so the rules that conflict with it stay off.
+{
+    "config": {
+        "extends": "markdownlint/style/prettier",
+        // Prompt files (skills, agents, commands) use XML-style tags, and docs use <details>.
+        "no-inline-html": false,
+        // Skill, agent and command files open with YAML frontmatter and often have no top-level heading.
+        "first-line-heading": false,
+        // Sections such as "Added" repeat under different parent headings.
+        "no-duplicate-heading": { "siblings_only": true },
+    },
+    "ignores": [
+        "node_modules/**",
+        "dist/**",
+        "coverage/**",
+        ".cache/**",
+        "docs/google-typescript-style.md",
+    ],
+}

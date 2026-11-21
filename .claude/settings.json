@@ -6,6 +6,8 @@
             "Edit(prettier.config.ts)",
             "Edit(tsconfig.json)",
             "Edit(.pre-commit-config.yaml)",
+            "Edit(.markdownlint-cli2.jsonc)",
+            "Edit(vitest.config.ts)",
             "Edit(bunfig.toml)",
             "Edit(CLAUDE.md)"
         ],

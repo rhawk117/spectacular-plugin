@@ -11,6 +11,7 @@ tooling:
                 - .oxlintrc.json
                 - prettier.config.ts
                 - .prettierignore
+                - .markdownlint-cli2.jsonc
                 - tsconfig.json
 
 claude-config:

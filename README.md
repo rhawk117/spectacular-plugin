@@ -55,10 +55,18 @@ Tests run in a shuffled order. Vitest prints the seed; rerun an order with
 summary lists the results, the seed with its reproduce command, failures with their tracebacks and
 the coverage per file.
 
+## Markdown
+
+The prek `markdown` group formats Markdown with Prettier (2-space indent) and lints its structure with
+markdownlint-cli2, including the plugin's skills, agents and commands. `.markdownlint-cli2.jsonc`
+turns off the rules that conflict with Prettier and with prompt files (inline XML tags, files that
+open with frontmatter instead of a heading).
+
 ## Claude Code hooks
 
-In Claude Code, `.claude/hooks/format.sh` runs after every edit: Prettier formats the file and
-ESLint fixes what it can. Errors ESLint cannot fix are sent back to Claude.
+In Claude Code, `.claude/hooks/format.sh` runs after every edit: Prettier formats the file, then
+ESLint (TypeScript) or markdownlint (Markdown) fixes what it can. Errors they cannot fix are sent
+back to Claude.
 `.claude/hooks/suppressions.sh` asks for permission before an edit adds a lint, type, format or
 coverage suppression comment.
 

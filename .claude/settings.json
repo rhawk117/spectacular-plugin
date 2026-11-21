@@ -9,9 +9,7 @@
             "Edit(bunfig.toml)",
             "Edit(CLAUDE.md)"
         ],
-        "deny": [
-            "Edit(bun.lock)"
-        ]
+        "deny": ["Edit(bun.lock)"]
     },
     "hooks": {
         "PostToolUse": [

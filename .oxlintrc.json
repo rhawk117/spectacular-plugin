@@ -10,6 +10,33 @@
     },
     "ignorePatterns": ["node_modules/", ".cache/", "coverage/", "dist/"],
     "rules": {
+        // Maintainer decision: a file holds at most 300 lines of code, so a module stays readable in one sitting.
+        "eslint/max-lines": [
+            "error",
+            { "max": 300, "skipBlankLines": true, "skipComments": true }
+        ],
+        // Maintainer decision: the size limits of mightymodels' ruff.toml ([lint.pylint] and [lint.mccabe]).
+        // pylint max-args and max-positional-args.
+        "eslint/max-params": ["error", 3],
+        // pylint max-statements.
+        "eslint/max-statements": ["error", 25],
+        // pylint max-nested-blocks.
+        "eslint/max-depth": ["error", 3],
+        // mccabe max-complexity.
+        "eslint/complexity": ["error", 8],
+        // pylint magic-value-comparison (PLR2004): name numeric constants; -1, 0 and 1 are idioms.
+        "typescript/no-magic-numbers": [
+            "error",
+            {
+                "ignore": [-1, 0, 1],
+                "ignoreArrayIndexes": true,
+                "ignoreDefaultValues": true,
+                "ignoreEnums": true,
+                "ignoreNumericLiteralTypes": true,
+                "ignoreReadonlyClassProperties": true,
+                "ignoreTypeIndexes": true
+            }
+        ],
         // SFB-02: no whitespace but ASCII space, including inside strings and templates.
         "eslint/no-irregular-whitespace": [
             "error",
@@ -104,7 +131,16 @@
             // Prettier and ESLint load their config through a default export (IMP-01: external code that requires it).
             "files": ["*.config.ts"],
             "rules": {
-                "import/no-default-export": "off"
+                "import/no-default-export": "off",
+                // Config files set thresholds and options as literal values, the shape their tools document.
+                "typescript/no-magic-numbers": "off"
+            }
+        },
+        {
+            // Tests compare against literal expected values, as in mightymodels' ruff per-file-ignores.
+            "files": ["**/*.test.ts", "tests/**"],
+            "rules": {
+                "typescript/no-magic-numbers": "off"
             }
         }
     ]

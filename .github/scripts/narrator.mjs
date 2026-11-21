@@ -35,15 +35,20 @@ class NarratorSettings {
 
 const jobResult = (job) => job.conclusion ?? job.status;
 
+const MILLISECONDS_PER_SECOND = 1000;
+const SECONDS_PER_MINUTE = 60;
+const SHORT_SHA_LENGTH = 7;
+
 const formatDuration = ({ started_at, completed_at }) => {
     if (!started_at || !completed_at) {
         return '—';
     }
 
     const seconds = Math.round(
-        (Date.parse(completed_at) - Date.parse(started_at)) / 1000,
+        (Date.parse(completed_at) - Date.parse(started_at)) /
+            MILLISECONDS_PER_SECOND,
     );
-    return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+    return `${Math.floor(seconds / SECONDS_PER_MINUTE)}m ${seconds % SECONDS_PER_MINUTE}s`;
 };
 
 const formatJobRow = (job) => {
@@ -101,7 +106,7 @@ const generateInitialSummary = (context, settings) => {
         `**${context.workflow}** · [Run #${context.runNumber}](${repositoryUrl}/actions/runs/${context.runId}) · Attempt ${settings.runAttempt}`,
         '',
         `**Branch:** \`${settings.branch}\``,
-        `**Commit:** [\`${commit.slice(0, 7)}\`](${repositoryUrl}/commit/${commit})`,
+        `**Commit:** [\`${commit.slice(0, SHORT_SHA_LENGTH)}\`](${repositoryUrl}/commit/${commit})`,
         `**Triggered by:** @${context.actor} via \`${context.eventName}\``,
         '',
         '### Job Summary',

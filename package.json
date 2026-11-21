@@ -27,6 +27,7 @@
         "eslint": "^10.14.0",
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-oxlint": "^1.92.0",
+        "eslint-plugin-sonarjs": "^4.2.2",
         "jiti": "^2.7.0",
         "markdownlint-cli2": "^0.24.0",
         "oxlint": "^1.92.0",

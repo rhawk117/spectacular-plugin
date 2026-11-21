@@ -7,11 +7,14 @@ import stylistic from '@stylistic/eslint-plugin';
 import type { Linter } from 'eslint';
 import prettier from 'eslint-config-prettier';
 import oxlint from 'eslint-plugin-oxlint';
+import sonarjs from 'eslint-plugin-sonarjs';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
 const FUNCTION_PARAM =
     ':function > :matches(ObjectPattern, AssignmentPattern > ObjectPattern)';
+const BOOLEAN_PARAM_OWNER =
+    ':matches(:function, TSDeclareFunction, TSMethodSignature, TSFunctionType, TSParameterProperty)';
 const CLASS_MEMBER =
     ':matches(PropertyDefinition, MethodDefinition, AccessorProperty, TSAbstractPropertyDefinition, TSAbstractMethodDefinition)';
 
@@ -88,6 +91,16 @@ const restrictedSyntax = [
         message:
             'TYP-08: add |null or |undefined where the alias is used, not in the alias.',
     },
+    {
+        selector: `${BOOLEAN_PARAM_OWNER} > Identifier[typeAnnotation.typeAnnotation.type="TSBooleanKeyword"]`,
+        message:
+            'FBT001 (maintainer decision): no boolean positional parameter; take an options object or split the function.',
+    },
+    {
+        selector: `${BOOLEAN_PARAM_OWNER} > AssignmentPattern > Literal.right[raw=/^(true|false)$/]`,
+        message:
+            'FBT002 (maintainer decision): no boolean default on a positional parameter; take an options object or split the function.',
+    },
 ];
 
 const namingConvention = [
@@ -149,7 +162,7 @@ const config: Linter.Config[] = defineConfig(
                 tsconfigRootDir: import.meta.dirname,
             },
         },
-        plugins: { '@stylistic': stylistic },
+        plugins: { '@stylistic': stylistic, sonarjs },
         rules: {
             '@typescript-eslint/naming-convention': [
                 'error',
@@ -228,6 +241,10 @@ const config: Linter.Config[] = defineConfig(
             ],
             // DOC-02: multi-line comments are several // lines, not /* */.
             '@stylistic/multiline-comment-style': ['error', 'separate-lines'],
+            // Maintainer decision: pylint max-bool-expr from mightymodels' ruff.toml.
+            'sonarjs/expression-complexity': ['error', { max: 3 }],
+            // Maintainer decision: pylint max-branches from mightymodels' ruff.toml, approximated by cognitive complexity.
+            'sonarjs/cognitive-complexity': ['error', 8],
         },
     },
     oxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),

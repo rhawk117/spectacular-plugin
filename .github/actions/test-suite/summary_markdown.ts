@@ -15,7 +15,7 @@ export interface CoverageEntry {
     readonly branches: CoverageMetric;
 }
 
-export type CoverageSummary = Readonly<Record<string, CoverageEntry>>;
+export type CoverageSummary = ReadonlyMap<string, CoverageEntry>;
 
 export interface Problem {
     readonly kind: ProblemKind;
@@ -77,7 +77,7 @@ function truncateTraceback(details: string): string {
 }
 
 function formatPercent(metric: CoverageMetric): string {
-    return typeof metric.pct === 'number' ? `${metric.pct.toFixed(1)}%` : '—';
+    return typeof metric.pct === 'number' ? `${metric.pct.toFixed(1)}%` : 'n/a';
 }
 
 function renderOverview(summary: RunSummary): string {
@@ -94,7 +94,7 @@ function renderOverview(summary: RunSummary): string {
         totals.skipped,
         totals.todo,
     ].map((cell) => String(cell));
-    const coverageTotal = coverage?.total;
+    const coverageTotal = coverage?.get('total');
     const coverageLine = coverageTotal
         ? `- **Coverage** ${formatPercent(coverageTotal.lines)} of lines`
         : '- **Coverage** not recorded';
@@ -166,7 +166,7 @@ function renderCoverage(
     if (!coverage) {
         return '';
     }
-    const rows = Object.entries(coverage).map(([path, entry]) => {
+    const rows = [...coverage].map(([path, entry]) => {
         const name = path === 'total' ? '**Total**' : relative(rootDir, path);
         const cells = [
             entry.statements,

@@ -7,34 +7,17 @@ import { parseArgs } from 'node:util';
 
 import {
     renderSummary,
-    type CoverageSummary,
     type Problem,
     type SuiteTotals,
     type SummaryContext,
 } from './summary_markdown.js';
-
-interface AssertionResult {
-    readonly fullName: string;
-    readonly status: string;
-    readonly failureMessages: readonly string[];
-}
-
-interface FileResult {
-    readonly name: string;
-    readonly status: string;
-    readonly message: string;
-    readonly endTime: number;
-    readonly assertionResults: readonly AssertionResult[];
-}
-
-interface JsonReport {
-    readonly numPassedTests: number;
-    readonly numFailedTests: number;
-    readonly numPendingTests: number;
-    readonly numTodoTests: number;
-    readonly startTime: number;
-    readonly testResults: readonly FileResult[];
-}
+import {
+    parseCoverageSummary,
+    parseJsonReport,
+    parsePackageVersion,
+    type FileResult,
+    type JsonReport,
+} from './vitest_report.js';
 
 const SEED_LIMIT = 4_294_967_296;
 const MILLISECONDS_PER_SECOND = 1000;
@@ -153,10 +136,13 @@ function readTotals(
 }
 
 function readVitestVersion(): string {
-    const manifest = readJson(
-        join(process.cwd(), 'node_modules', 'vitest', 'package.json'),
-    ) as { readonly version: string };
-    return manifest.version;
+    const manifestPath = join(
+        process.cwd(),
+        'node_modules',
+        'vitest',
+        'package.json',
+    );
+    return parsePackageVersion(readJson(manifestPath));
 }
 
 function summarizeVitestRun(argv: readonly string[]): number {
@@ -179,11 +165,11 @@ function summarizeVitestRun(argv: readonly string[]): number {
         return 1;
     }
 
-    const report = readJson(jsonReport) as JsonReport;
+    const report = parseJsonReport(readJson(jsonReport));
     const coveragePath = values['coverage-summary'];
     const coverage =
         coveragePath && existsSync(coveragePath)
-            ? (readJson(coveragePath) as CoverageSummary)
+            ? parseCoverageSummary(readJson(coveragePath))
             : undefined;
     const problems = report.testResults.flatMap((file) =>
         readFileProblems(file),

@@ -14,13 +14,16 @@
         "lint": "prek run --all-files --group lint",
         "build": "bash scripts/build.sh",
         "typecheck": "tsc --noEmit",
-        "test": "vitest run"
+        "test": "vitest run --project unit",
+        "test:integration": "vitest run --project integration",
+        "coverage": "vitest run --project unit --coverage"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@j178/prek": "^0.5.10",
         "@stylistic/eslint-plugin": "^5.10.0",
         "@types/node": "24",
+        "@vitest/coverage-v8": "^5.1.0",
         "eslint": "^10.14.0",
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-oxlint": "^1.92.0",

@@ -79,12 +79,14 @@ jobs:
               background: true
               run: bun run prek run --all-files --show-diff-on-failure
 
-            - name: Run Test Suite
+            - name: Run Test Suite (Unit Tier)
               background: true
               uses: $/.github/actions/test-suite
+              with:
+                  project: unit
 
     integration-checks:
-        name: 🧩 Plugin Validation
+        name: 🧪 Integration Tests
         runs-on: ubuntu-24.04
         timeout-minutes: 15
         permissions:
@@ -95,13 +97,21 @@ jobs:
               with:
                   persist-credentials: false
 
-            - name: Setup Node.js
-              uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+            - name: Setup Toolchain
+              uses: $/.github/actions/setup-toolchain
               with:
                   node-version: ${{ vars.NODE_VERSION }}
 
             - name: Validate Claude Code Plugin
+              background: true
               run: bash ./.github/scripts/cc-plugin-checker.sh
+
+            - name: Run Integration Tests
+              background: true
+              uses: $/.github/actions/test-suite
+              with:
+                  project: integration
+                  coverage: 'false'
 
     workflow-narrator:
         name: 🔉 Workflow Narrator

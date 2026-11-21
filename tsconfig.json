@@ -20,5 +20,5 @@
         "incremental": true,
         "tsBuildInfoFile": ".cache/tsc/tsconfig.tsbuildinfo"
     },
-    "include": ["src", "*.ts"]
+    "include": ["src", "tests", ".github/**/*.ts", "*.ts"]
 }

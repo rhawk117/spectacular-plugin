@@ -53,7 +53,7 @@ runs:
           shell: bash
           run: echo "value=osv-v1-${RUNNER_OS}-$(date -u +%G-W%V)-${LOCK_HASH}" >> "$GITHUB_OUTPUT"
           env:
-              LOCK_HASH: ${{ hashFiles('package.json', 'bun.lock') }}
+              LOCK_HASH: ${{ hashFiles('package.json', 'bun.lock', 'osv-scanner.toml') }}
 
         - id: cache
           if: ${{ inputs.force-scan != 'true' }}
@@ -70,6 +70,7 @@ runs:
           with:
               scan-args: |-
                   --lockfile=./bun.lock
+                  --config=./osv-scanner.toml
                   --format=sarif
                   --output=${{ inputs.sarif-path }}
 

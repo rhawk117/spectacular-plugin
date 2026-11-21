@@ -69,6 +69,8 @@ ESLint (TypeScript) or markdownlint (Markdown) fixes what it can. Errors they ca
 back to Claude.
 `.claude/hooks/suppressions.sh` asks for permission before an edit adds a lint, type, format or
 coverage suppression comment.
+`.claude/hooks/stop-checks.sh` runs before Claude finishes: the prek lint hooks on changed files,
+then the unit tests when a TypeScript file changed. Failures are sent back to Claude.
 
 ## CI
 

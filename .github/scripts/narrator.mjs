@@ -41,7 +41,7 @@ const SHORT_SHA_LENGTH = 7;
 
 const formatDuration = ({ started_at, completed_at }) => {
     if (!started_at || !completed_at) {
-        return '—';
+        return 'n/a';
     }
 
     const seconds = Math.round(
@@ -56,7 +56,7 @@ const formatJobRow = (job) => {
     const icon = jobResultIcons.get(result) ?? ':grey_question:';
     const title = result.charAt(0).toUpperCase() + result.slice(1);
 
-    return `| ${job.name.replaceAll('|', '\\|')} | ${icon} ${title} | ${formatDuration(job)} | ${job.runner_name ?? '—'} | [View Job](${job.html_url}) |`;
+    return `| ${job.name.replaceAll('|', '\\|')} | ${icon} ${title} | ${formatDuration(job)} | ${job.runner_name ?? 'n/a'} | [View Job](${job.html_url}) |`;
 };
 
 const formatFailedSteps = (job) =>

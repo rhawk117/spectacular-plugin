@@ -1,0 +1,32 @@
+{
+    "permissions": {
+        "ask": [
+            "Edit(eslint.config.ts)",
+            "Edit(.oxlintrc.json)",
+            "Edit(prettier.config.ts)",
+            "Edit(tsconfig.json)",
+            "Edit(.pre-commit-config.yaml)",
+            "Edit(bunfig.toml)",
+            "Edit(CLAUDE.md)"
+        ],
+        "deny": [
+            "Edit(bun.lock)"
+        ]
+    },
+    "hooks": {
+        "PostToolUse": [
+            {
+                "matcher": "Edit|Write|MultiEdit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash",
+                        "args": [
+                            "${CLAUDE_PROJECT_DIR}/.claude/hooks/format.sh"
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}

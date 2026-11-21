@@ -62,14 +62,14 @@ repos:
             groups: [hygiene, lint]
             priority: lint
 
-    # Project-local binaries from node_modules (bun install), so prek, package scripts,
+    # Project-local binaries through bun run (bun install), so prek, package scripts,
     # the Claude Code hooks and CI all run the versions locked in bun.lock.
     - repo: local
       hooks:
           - id: oxlint-fix
             name: oxlint fix
             language: system
-            entry: node_modules/.bin/oxlint --fix
+            entry: bun run oxlint --fix
             types_or: [ts, javascript]
             groups: [typescript, format]
             priority: 10
@@ -77,7 +77,7 @@ repos:
           - id: eslint-fix
             name: eslint fix
             language: system
-            entry: node_modules/.bin/eslint --fix --cache --cache-location .cache/eslint/
+            entry: bun run eslint --fix --cache --cache-location .cache/eslint/
             types: [ts]
             require_serial: true
             groups: [typescript, format]
@@ -86,7 +86,7 @@ repos:
           - id: prettier-write
             name: prettier write
             language: system
-            entry: node_modules/.bin/prettier --write --cache --cache-location .cache/prettier/cache.json --ignore-unknown
+            entry: bun run prettier --write --cache --cache-location .cache/prettier/cache.json --ignore-unknown
             types: [text]
             groups: [typescript, format]
             priority: 12
@@ -103,7 +103,7 @@ repos:
           - id: prettier-check
             name: prettier check
             language: system
-            entry: node_modules/.bin/prettier --check --cache --cache-location .cache/prettier/cache.json --ignore-unknown
+            entry: bun run prettier --check --cache --cache-location .cache/prettier/cache.json --ignore-unknown
             types: [text]
             groups: [typescript, lint]
             priority: lint
@@ -111,7 +111,7 @@ repos:
           - id: oxlint
             name: oxlint
             language: system
-            entry: node_modules/.bin/oxlint --deny-warnings
+            entry: bun run oxlint --deny-warnings
             types_or: [ts, javascript]
             groups: [typescript, lint]
             priority: lint
@@ -119,7 +119,7 @@ repos:
           - id: eslint
             name: eslint
             language: system
-            entry: node_modules/.bin/eslint --cache --cache-location .cache/eslint/ --max-warnings 0
+            entry: bun run eslint --cache --cache-location .cache/eslint/ --max-warnings 0
             types: [ts]
             require_serial: true
             groups: [typescript, lint]
@@ -137,7 +137,7 @@ repos:
           - id: tsc
             name: tsc
             language: system
-            entry: node_modules/.bin/tsc --noEmit
+            entry: bun run tsc --noEmit
             files: (\.ts|^tsconfig\.json|^package\.json)$
             pass_filenames: false
             groups: [typescript, lint]

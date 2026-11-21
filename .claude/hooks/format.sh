@@ -4,8 +4,6 @@
 set -uo pipefail
 
 readonly PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
-readonly PRETTIER="$PROJECT_DIR/node_modules/.bin/prettier"
-readonly ESLINT="$PROJECT_DIR/node_modules/.bin/eslint"
 readonly PRETTIER_CACHE=".cache/prettier/cache.json"
 readonly ESLINT_CACHE=".cache/eslint/"
 
@@ -13,8 +11,12 @@ edited_file() {
   jq -er '.tool_input.file_path // empty' 2>/dev/null
 }
 
+toolchain_ready() {
+  command -v bun >/dev/null 2>&1 && [[ -d node_modules ]]
+}
+
 run_prettier() {
-  "$PRETTIER" --write --cache --cache-location "$PRETTIER_CACHE" --log-level silent -- "$1" >/dev/null 2>&1
+  bun run prettier --write --cache --cache-location "$PRETTIER_CACHE" --log-level silent -- "$1" >/dev/null 2>&1
 }
 
 main() {
@@ -34,12 +36,12 @@ main() {
   esac
 
   cd "$PROJECT_DIR" || exit 0
-  [[ -x "$PRETTIER" ]] || exit 0
+  toolchain_ready || exit 0
   run_prettier "$file_path" || exit 0
 
-  [[ "$file_path" == *.ts && -x "$ESLINT" ]] || exit 0
+  [[ "$file_path" == *.ts ]] || exit 0
 
-  eslint_output=$("$ESLINT" --fix --cache --cache-location "$ESLINT_CACHE" --format stylish -- "$file_path" 2>&1)
+  eslint_output=$(bun run eslint --fix --cache --cache-location "$ESLINT_CACHE" --format stylish -- "$file_path" 2>&1)
   eslint_status=$?
 
   # ESLint fixes can change layout, so Prettier gets the last word.
